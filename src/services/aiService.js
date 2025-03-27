@@ -15,9 +15,10 @@ const enhancePrompt = async (originalPrompt) => {
     - Add clarity, specificity, and structure
     - Make the prompt more effective for AI systems
     - Do not change the fundamental request or add unintended requirements
-    - Format the prompt appropriately (e.g., add paragraphs, bullet points if needed)
+    - Format the enhanced prompt in a clean, readable way
     - Do not add any additional text or instructions
     - Keep the prompt concise and to the points
+    - Maintain the original language and terminology used by the user
     
     Original prompt: ${originalPrompt}
     
