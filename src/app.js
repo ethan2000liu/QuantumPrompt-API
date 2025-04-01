@@ -20,8 +20,9 @@ const PORT = process.env.PORT || 3000;
 app.use(helmet());
 app.use(express.json());
 app.use(cors({
-  origin: ['chrome-extension://*', 'https://chat.openai.com', 'https://gemini.google.com'],
-  methods: ['POST'],
+  origin: '*',  // Allow all origins
+  methods: ['POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Add this after your middleware setup but before your routes
