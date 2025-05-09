@@ -56,6 +56,11 @@ app.use('/api/prompt', promptRoutes);
 app.use('/api/api-keys', apiKeyRoutes);
 app.use('/api/settings', settingsRoutes);
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 // Serve frontend
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));

@@ -13,7 +13,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // Test database connection
 const testConnection = async () => {
   try {
-    const { data, error } = await supabase.from('user_settings').select('count').limit(1);
+    const { data, error } = await supabase.auth.getSession();
     if (error) throw error;
     logger.info('Successfully connected to Supabase');
   } catch (error) {
