@@ -15,8 +15,8 @@ const apiKeySchema = z.object({
 });
 
 const settingsSchema = z.object({
-  preferredModel: z.enum(['gpt-4', 'gpt-3.5-turbo', 'gemini-1.5-flash']),
-  useOwnApi: z.boolean()
+  useOwnApi: z.boolean(),
+  selectedKeyId: z.string().uuid().optional()
 });
 
 const validateAuthRequest = (req, res, next) => {

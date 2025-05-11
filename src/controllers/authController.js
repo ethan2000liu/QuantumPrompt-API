@@ -25,12 +25,16 @@ const register = async (req, res) => {
     const { data: user, error } = await supabase
       .from('users')
       .insert([
-        { email, password: hashedPassword }
+        { email, password_hash: hashedPassword }
       ])
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase insert error:', error);
+      logger.error('Supabase insert error:', error);
+      throw error;
+    }
 
     // Create default user settings
     await supabase
@@ -38,8 +42,9 @@ const register = async (req, res) => {
       .insert([
         { 
           user_id: user.id,
-          preferred_model: 'gemini-1.5-flash',
-          use_own_api: false
+          theme: 'light',
+          language: 'en',
+          notifications_enabled: true
         }
       ]);
 
@@ -79,8 +84,15 @@ const register = async (req, res) => {
       }
     });
   } catch (error) {
-    logger.error('Registration error:', error.message);
-    res.status(500).json({ error: 'Failed to register user' });
+    console.error('Registration error (full):', error);
+    logger.error('Registration error:', error);
+    if (error && error.message) {
+      res.status(500).json({ error: error.message });
+    } else if (error && error.details) {
+      res.status(500).json({ error: error.details });
+    } else {
+      res.status(500).json({ error: 'Failed to register user', details: error });
+    }
   }
 };
 
@@ -91,7 +103,7 @@ const login = async (req, res) => {
     // Get user from Supabase
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, email, password')
+      .select('id, email, password_hash')
       .eq('email', email)
       .single();
 
@@ -100,7 +112,7 @@ const login = async (req, res) => {
     }
 
     // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -138,7 +150,8 @@ const login = async (req, res) => {
       user: {
         id: user.id,
         email: user.email
-      }
+      },
+      token
     });
   } catch (error) {
     logger.error('Login error:', error.message);

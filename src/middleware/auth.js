@@ -5,12 +5,14 @@ const logger = require('../utils/logger');
 const verifyToken = async (req, res, next) => {
   try {
     const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
+    logger.info('Auth token:', { token: token ? 'present' : 'missing' });
 
     if (!token) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    logger.info('Decoded token:', { userId: decoded.userId });
     
     // Verify user still exists in Supabase
     const { data: user, error } = await supabase
@@ -20,13 +22,14 @@ const verifyToken = async (req, res, next) => {
       .single();
 
     if (error || !user) {
+      logger.error('User verification failed:', { error, user });
       return res.status(401).json({ error: 'Invalid token' });
     }
 
     req.user = user;
     next();
   } catch (error) {
-    logger.error('Authentication error:', error.message);
+    logger.error('Authentication error:', error);
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({ error: 'Token expired' });
     }

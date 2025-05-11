@@ -16,6 +16,8 @@ const addApiKey = async (req, res) => {
     const { provider, apiKey } = req.body;
     const userId = req.user.id;
 
+    logger.info('Adding API key:', { provider, userId });
+
     // Encrypt API key
     const encryptedApiKey = encryptApiKey(apiKey);
 
@@ -32,7 +34,10 @@ const addApiKey = async (req, res) => {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      logger.error('Supabase insert error:', error);
+      throw error;
+    }
 
     res.status(201).json({
       message: 'API key added successfully',
@@ -40,8 +45,11 @@ const addApiKey = async (req, res) => {
       provider: data.provider
     });
   } catch (error) {
-    logger.error('Add API key error:', error.message);
-    res.status(500).json({ error: 'Failed to add API key' });
+    logger.error('Add API key error:', error);
+    res.status(500).json({ 
+      error: 'Failed to add API key',
+      details: error.message || error
+    });
   }
 };
 
