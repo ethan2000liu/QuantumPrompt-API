@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuantumPrompt API</title>
+    <title>QuantumPrompt API Documentation</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             color: #333;
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
             background-color: #f5f5f5;
@@ -18,7 +18,7 @@
             text-align: center;
             margin-bottom: 30px;
         }
-        h1 {
+        h1, h2, h3 {
             color: #2c3e50;
         }
         .container {
@@ -26,6 +26,35 @@
             border-radius: 8px;
             padding: 20px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .endpoint {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .method {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .get { background-color: #61affe; }
+        .post { background-color: #49cc90; }
+        .put { background-color: #fca130; }
+        .delete { background-color: #f93e3e; }
+        pre {
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            border: 1px solid #ddd;
+        }
+        code {
+            font-family: 'Courier New', Courier, monospace;
         }
         .demo-section {
             margin-top: 30px;
@@ -62,13 +91,6 @@
             border-radius: 4px;
             white-space: pre-wrap;
         }
-        code {
-            background-color: #f8f8f8;
-            padding: 2px 5px;
-            border-radius: 3px;
-            font-family: monospace;
-            border: 1px solid #ddd;
-        }
         .loading {
             display: none;
             text-align: center;
@@ -87,31 +109,127 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .note {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1>QuantumPrompt API</h1>
+        <h1>QuantumPrompt API Documentation</h1>
         <p>Enhance your prompts for AI chatbots like ChatGPT and Google Gemini</p>
     </header>
 
     <div class="container">
-        <h2>About</h2>
-        <p>QuantumPrompt is an API service that enhances user prompts to make them more effective for AI systems. It adds clarity, specificity, and structure while maintaining the original intent.</p>
-        
-        <h2>API Usage</h2>
-        <p>Send a POST request to <code>/api/enhance</code> with a JSON body containing your prompt:</p>
-        <pre><code>
-{
-  "prompt": "Your original prompt here"
-}
-        </code></pre>
-        
-        <h2>Example with curl</h2>
-        <pre><code>curl -X POST https://quantum-prompt-api.vercel.app/api/enhance \
+        <h2>Authentication</h2>
+        <p>All API endpoints require authentication using JWT tokens. Include the token in the Authorization header:</p>
+        <pre><code>Authorization: Bearer YOUR_JWT_TOKEN</code></pre>
+
+        <div class="endpoint">
+            <h3><span class="method post">POST</span> /api/auth/register</h3>
+            <p>Register a new user account.</p>
+            <pre><code>curl -X POST https://quantum-prompt-api.vercel.app/api/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"compose report for BTC today"}'</code></pre>
-        
+  -d '{
+    "email": "user@example.com",
+    "password": "your_password"
+  }'</code></pre>
+        </div>
+
+        <div class="endpoint">
+            <h3><span class="method post">POST</span> /api/auth/login</h3>
+            <p>Login to get JWT token.</p>
+            <pre><code>curl -X POST https://quantum-prompt-api.vercel.app/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "your_password"
+  }'</code></pre>
+        </div>
+
+        <div class="endpoint">
+            <h3><span class="method get">GET</span> /api/auth/session</h3>
+            <p>Get current user session and settings.</p>
+            <pre><code>curl -X GET https://quantum-prompt-api.vercel.app/api/auth/session \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"</code></pre>
+        </div>
+
+        <div class="endpoint">
+            <h3><span class="method post">POST</span> /api/auth/logout</h3>
+            <p>Logout and invalidate current session.</p>
+            <pre><code>curl -X POST https://quantum-prompt-api.vercel.app/api/auth/logout \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"</code></pre>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>API Key Management</h2>
+        <div class="endpoint">
+            <h3><span class="method post">POST</span> /api/keys</h3>
+            <p>Add a new API key.</p>
+            <pre><code>curl -X POST https://quantum-prompt-api.vercel.app/api/keys \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "gemini",
+    "apiKey": "your-gemini-api-key"
+  }'</code></pre>
+        </div>
+
+        <div class="endpoint">
+            <h3><span class="method get">GET</span> /api/keys</h3>
+            <p>List all API keys.</p>
+            <pre><code>curl -X GET https://quantum-prompt-api.vercel.app/api/keys \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"</code></pre>
+        </div>
+
+        <div class="endpoint">
+            <h3><span class="method delete">DELETE</span> /api/keys/:id</h3>
+            <p>Delete an API key.</p>
+            <pre><code>curl -X DELETE https://quantum-prompt-api.vercel.app/api/keys/KEY_ID \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"</code></pre>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>User Settings</h2>
+        <div class="endpoint">
+            <h3><span class="method get">GET</span> /api/settings</h3>
+            <p>Get user settings.</p>
+            <pre><code>curl -X GET https://quantum-prompt-api.vercel.app/api/settings \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"</code></pre>
+        </div>
+
+        <div class="endpoint">
+            <h3><span class="method put">PUT</span> /api/settings</h3>
+            <p>Update user settings.</p>
+            <pre><code>curl -X PUT https://quantum-prompt-api.vercel.app/api/settings \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "useOwnApi": true,
+    "selectedKeyId": "your-selected-key-id"
+  }'</code></pre>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Prompt Enhancement</h2>
+        <div class="endpoint">
+            <h3><span class="method post">POST</span> /api/prompt/enhance</h3>
+            <p>Enhance a prompt using AI.</p>
+            <pre><code>curl -X POST https://quantum-prompt-api.vercel.app/api/prompt/enhance \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Your prompt text here",
+    "useOwnApi": true
+  }'</code></pre>
+        </div>
+
         <div class="demo-section">
             <h2>Try It Now</h2>
             <p>Enter a prompt below to see how QuantumPrompt enhances it:</p>
@@ -133,8 +251,24 @@
         </div>
     </div>
 
+    <div class="container">
+        <h2>Usage Logs</h2>
+        <div class="endpoint">
+            <h3><span class="method get">GET</span> /api/usage</h3>
+            <p>Get usage logs.</p>
+            <pre><code>curl -X GET https://quantum-prompt-api.vercel.app/api/usage \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"</code></pre>
+        </div>
+    </div>
+
+    <div class="note">
+        <strong>Note:</strong> Replace <code>YOUR_JWT_TOKEN</code> with the actual JWT token received after login.
+        Replace <code>KEY_ID</code> with the actual UUID of the API key you want to delete.
+        Replace <code>your-selected-key-id</code> with the actual UUID of the API key you want to select.
+    </div>
+
     <footer style="text-align: center; margin-top: 30px; color: #7f8c8d;">
-        <p>QuantumPrompt API &copy; 2023</p>
+        <p>QuantumPrompt API &copy; 2024</p>
     </footer>
 
     <script>
@@ -150,12 +284,11 @@
                 return;
             }
             
-            // Show loading spinner
             loadingElement.style.display = 'block';
             resultElement.style.display = 'none';
             
             try {
-                const response = await fetch('/api/enhance', {
+                const response = await fetch('/api/prompt/enhance', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -169,11 +302,9 @@
                 
                 const data = await response.json();
                 
-                // Display results
                 originalPromptElement.textContent = data.originalPrompt;
                 enhancedPromptElement.textContent = data.enhancedPrompt;
                 
-                // Hide loading, show result
                 loadingElement.style.display = 'none';
                 resultElement.style.display = 'block';
                 

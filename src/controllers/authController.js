@@ -25,7 +25,7 @@ const register = async (req, res) => {
     const { data: user, error } = await supabase
       .from('users')
       .insert([
-        { email, password_hash: hashedPassword }
+        { email, password: hashedPassword }
       ])
       .select()
       .single();
@@ -42,9 +42,8 @@ const register = async (req, res) => {
       .insert([
         { 
           user_id: user.id,
-          theme: 'light',
-          language: 'en',
-          notifications_enabled: true
+          preferred_model: 'gemini-1.5-flash',
+          use_own_api: false
         }
       ]);
 
@@ -103,7 +102,7 @@ const login = async (req, res) => {
     // Get user from Supabase
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, email, password_hash')
+      .select('id, email, password')
       .eq('email', email)
       .single();
 
@@ -112,7 +111,7 @@ const login = async (req, res) => {
     }
 
     // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
