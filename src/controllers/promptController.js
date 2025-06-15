@@ -67,11 +67,11 @@ const enhancePromptController = async (req, res) => {
       apiKey,
       model
     });
-
+    
     res.json({
       success: true,
       data: {
-        originalPrompt: prompt,
+      originalPrompt: prompt,
         enhancedPrompt
       }
     });

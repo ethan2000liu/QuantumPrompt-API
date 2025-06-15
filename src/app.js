@@ -72,13 +72,13 @@ app.use(errorHandler);
 // Test database connection and start server
 testConnection()
   .then(() => {
-    app.listen(PORT, () => {
-      logger.info(`Server running on port ${PORT}`);
+app.listen(PORT, () => {
+  logger.info(`Server running on port ${PORT}`);
     });
   })
   .catch((error) => {
     logger.error('Failed to start server:', error);
     process.exit(1);
-  });
+});
 
 module.exports = app; 

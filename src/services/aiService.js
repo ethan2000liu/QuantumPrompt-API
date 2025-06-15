@@ -38,7 +38,7 @@ const enhancePrompt = async (originalPrompt, options = {}) => {
       const genAI = new GoogleGenerativeAI(apiKey);
       const geminiModel = genAI.getGenerativeModel({ model });
       const result = await geminiModel.generateContent(prompt);
-      const response = await result.response;
+    const response = await result.response;
       enhancedPrompt = response.text().trim();
     } else if (provider === 'openai') {
       const openai = new OpenAI({ apiKey });
