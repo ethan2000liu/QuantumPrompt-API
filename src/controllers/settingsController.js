@@ -61,16 +61,16 @@ const getSettings = async (req, res) => {
 const updateSettings = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { useOwnApi, selectedKeyId } = req.body;
+    const { use_own_api, selected_key_id } = req.body;
 
-    logger.info('Updating settings for user:', { userId, useOwnApi, selectedKeyId });
+    logger.info('Updating settings for user:', { userId, use_own_api, selected_key_id });
 
     // If selecting a specific key, verify it belongs to the user
-    if (selectedKeyId) {
+    if (selected_key_id) {
       const { data: keyData, error: keyError } = await supabase
         .from('api_keys')
         .select('id')
-        .eq('id', selectedKeyId)
+        .eq('id', selected_key_id)
         .eq('user_id', userId)
         .single();
 
@@ -79,19 +79,44 @@ const updateSettings = async (req, res) => {
       }
     }
 
-    const { data: settings, error } = await supabase
+    // First try to update
+    const { data: settings, error: updateError } = await supabase
       .from('user_settings')
       .update({
-        use_own_api: useOwnApi,
-        selected_key_id: selectedKeyId
+        use_own_api,
+        selected_key_id
       })
       .eq('user_id', userId)
       .select()
       .single();
 
-    if (error) {
-      logger.error('Error updating settings:', error);
-      throw new SettingsError('Failed to update settings', error);
+    // If no rows were updated, create new settings
+    if (updateError && updateError.code === 'PGRST116') {
+      const { data: newSettings, error: insertError } = await supabase
+        .from('user_settings')
+        .insert([{
+          user_id: userId,
+          use_own_api,
+          selected_key_id,
+          preferred_model: 'gemini-1.5-flash'
+        }])
+        .select()
+        .single();
+
+      if (insertError) {
+        logger.error('Error creating settings:', insertError);
+        throw new SettingsError('Failed to create settings', insertError);
+      }
+
+      return res.json({
+        success: true,
+        data: newSettings
+      });
+    }
+
+    if (updateError) {
+      logger.error('Error updating settings:', updateError);
+      throw new SettingsError('Failed to update settings', updateError);
     }
 
     res.json({

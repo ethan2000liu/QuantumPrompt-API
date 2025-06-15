@@ -11,22 +11,44 @@ const verifyToken = async (req, res, next) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
+    // First verify our custom JWT
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     logger.info('Decoded token:', { userId: decoded.userId });
     
-    // Verify user still exists in Supabase
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('id, email')
-      .eq('id', decoded.userId)
-      .single();
+    // Then verify with Supabase session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session) {
+      logger.error('Session verification failed:', { error: sessionError });
+      return res.status(401).json({ error: 'Invalid session' });
+    }
 
-    if (error || !user) {
-      logger.error('User verification failed:', { error, user });
+    // Verify the user ID matches
+    if (session.user.id !== decoded.userId) {
+      logger.error('User ID mismatch:', { 
+        sessionUserId: session.user.id, 
+        tokenUserId: decoded.userId 
+      });
       return res.status(401).json({ error: 'Invalid token' });
     }
 
-    req.user = user;
+    // Get user settings
+    const { data: settings, error: settingsError } = await supabase
+      .from('user_settings')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .single();
+
+    if (settingsError) {
+      logger.error('Settings fetch error:', settingsError);
+      // Don't return error here, as user is still valid
+    }
+
+    req.user = {
+      id: session.user.id,
+      email: session.user.email,
+      settings: settings || null
+    };
     next();
   } catch (error) {
     logger.error('Authentication error:', error);

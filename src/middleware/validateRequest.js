@@ -15,8 +15,8 @@ const apiKeySchema = z.object({
 });
 
 const settingsSchema = z.object({
-  useOwnApi: z.boolean(),
-  selectedKeyId: z.string().uuid().optional()
+  use_own_api: z.boolean().optional(),
+  selected_key_id: z.string().uuid().nullable().optional()
 });
 
 const validateAuthRequest = (req, res, next) => {

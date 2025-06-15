@@ -1,0 +1,718 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "QuantumPrompt API",
+    "version": "1.0.0",
+    "description": "API documentation for QuantumPrompt with CURL examples"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Register a new user",
+        "description": "Creates a new user account and sends a verification email",
+        "x-codeSamples": [
+          {
+            "lang": "curl",
+            "source": "curl -X POST http://localhost:3000/api/auth/register \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"email\":\"user@example.com\",\"password\":\"password123\"}'"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "user@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "example": "password123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Registration successful. Please check your email to verify your account."
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "email": {
+                          "type": "string",
+                          "format": "email"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Please provide a valid email address"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Login user",
+        "description": "Authenticates a user and returns JWT tokens",
+        "x-codeSamples": [
+          {
+            "lang": "curl",
+            "source": "curl -X POST http://localhost:3000/api/auth/login \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"email\":\"user@example.com\",\"password\":\"password123\"}'"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "user@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "password123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Login successful"
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "email": {
+                          "type": "string",
+                          "format": "email"
+                        }
+                      }
+                    },
+                    "token": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Invalid email or password"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Logout user",
+        "description": "Logs out the current user and invalidates the session",
+        "x-codeSamples": [
+          {
+            "lang": "curl",
+            "source": "curl -X POST http://localhost:3000/api/auth/logout \\\n  -H \"Authorization: Bearer YOUR_JWT_TOKEN\""
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Logout successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Logged out successfully"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/session": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Get current session",
+        "description": "Returns the current user's session information and settings",
+        "x-codeSamples": [
+          {
+            "lang": "curl",
+            "source": "curl -X GET http://localhost:3000/api/auth/session \\\n  -H \"Authorization: Bearer YOUR_JWT_TOKEN\""
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session information retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "email": {
+                          "type": "string",
+                          "format": "email"
+                        }
+                      }
+                    },
+                    "settings": {
+                      "type": "object",
+                      "properties": {
+                        "preferred_model": {
+                          "type": "string",
+                          "example": "gemini-1.5-flash"
+                        },
+                        "use_own_api": {
+                          "type": "boolean",
+                          "example": false
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "No active session"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/reset-password/request": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Request password reset",
+        "description": "Sends a password reset email to the user",
+        "x-codeSamples": [
+          {
+            "lang": "curl",
+            "source": "curl -X POST http://localhost:3000/api/auth/reset-password/request \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"email\":\"user@example.com\"}'"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "user@example.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset email sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Password reset instructions sent to your email"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Please provide a valid email address"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api-keys": {
+      "get": {
+        "tags": ["API Keys"],
+        "summary": "Get user's API keys",
+        "description": "Retrieves all API keys for the current user",
+        "x-codeSamples": [
+          {
+            "lang": "curl",
+            "source": "curl -X GET http://localhost:3000/api/api-keys \\\n  -H \"Authorization: Bearer YOUR_JWT_TOKEN\""
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "API keys retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "name": {
+                        "type": "string",
+                        "example": "My API Key"
+                      },
+                      "provider": {
+                        "type": "string",
+                        "example": "gemini"
+                      },
+                      "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["API Keys"],
+        "summary": "Create new API key",
+        "description": "Creates a new API key for the current user",
+        "x-codeSamples": [
+          {
+            "lang": "curl",
+            "source": "curl -X POST http://localhost:3000/api/api-keys \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Authorization: Bearer YOUR_JWT_TOKEN\" \\\n  -d '{\"name\":\"My API Key\",\"apiKey\":\"your-api-key-here\",\"provider\":\"gemini\"}'"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "apiKey", "provider"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "My API Key"
+                  },
+                  "apiKey": {
+                    "type": "string",
+                    "example": "your-api-key-here"
+                  },
+                  "provider": {
+                    "type": "string",
+                    "enum": ["gemini"],
+                    "example": "gemini"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "API key created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "provider": {
+                      "type": "string"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api-keys/{id}": {
+      "delete": {
+        "tags": ["API Keys"],
+        "summary": "Delete API key",
+        "description": "Deletes an API key by ID",
+        "x-codeSamples": [
+          {
+            "lang": "curl",
+            "source": "curl -X DELETE http://localhost:3000/api/api-keys/YOUR_API_KEY_ID \\\n  -H \"Authorization: Bearer YOUR_JWT_TOKEN\""
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "API key deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "API key deleted successfully"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/settings": {
+      "get": {
+        "tags": ["Settings"],
+        "summary": "Get user settings",
+        "description": "Retrieves the current user's settings",
+        "x-codeSamples": [
+          {
+            "lang": "curl",
+            "source": "curl -X GET http://localhost:3000/api/settings \\\n  -H \"Authorization: Bearer YOUR_JWT_TOKEN\""
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Settings retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "preferred_model": {
+                      "type": "string",
+                      "example": "gemini-1.5-flash"
+                    },
+                    "use_own_api": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "selected_key_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Settings"],
+        "summary": "Update user settings",
+        "description": "Updates the current user's settings",
+        "x-codeSamples": [
+          {
+            "lang": "curl",
+            "source": "curl -X PUT http://localhost:3000/api/settings \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Authorization: Bearer YOUR_JWT_TOKEN\" \\\n  -d '{\"use_own_api\":true,\"selected_key_id\":\"YOUR_API_KEY_ID\"}'"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "use_own_api": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "selected_key_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Settings updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Settings updated successfully"
+                    },
+                    "settings": {
+                      "type": "object",
+                      "properties": {
+                        "use_own_api": {
+                          "type": "boolean"
+                        },
+                        "selected_key_id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "nullable": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prompt/enhance": {
+      "post": {
+        "tags": ["Prompt"],
+        "summary": "Enhance prompt",
+        "description": "Enhances a prompt using AI",
+        "x-codeSamples": [
+          {
+            "lang": "curl",
+            "source": "curl -X POST http://localhost:3000/api/prompt/enhance \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Authorization: Bearer YOUR_JWT_TOKEN\" \\\n  -d '{\"prompt\":\"Write a function to calculate fibonacci numbers\"}'"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["prompt"],
+                "properties": {
+                  "prompt": {
+                    "type": "string",
+                    "example": "Write a function to calculate fibonacci numbers"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Prompt enhanced successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "enhanced_prompt": {
+                      "type": "string",
+                      "example": "Write a function to calculate fibonacci numbers with error handling and input validation"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Prompt is required"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+} 

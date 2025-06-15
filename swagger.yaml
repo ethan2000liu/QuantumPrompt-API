@@ -1,0 +1,364 @@
+openapi: 3.0.0
+info:
+  title: QuantumPrompt API
+  version: 1.0.0
+  description: API for enhancing prompts using various AI models
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "Invalid request"
+        details:
+          type: object
+          nullable: true
+
+    ApiKey:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        provider:
+          type: string
+          enum: [google, openai]
+        api_key:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Settings:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        use_own_api:
+          type: boolean
+        selected_key_id:
+          type: string
+          format: uuid
+          nullable: true
+        preferred_model:
+          type: string
+          enum: [gemini-1.5-flash, gemini-1.5-pro, gpt-4, gpt-3.5-turbo]
+
+    UsageLog:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        prompt_length:
+          type: integer
+        model_used:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+paths:
+  /api/enhance:
+    post:
+      summary: Enhance a prompt using AI
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - prompt
+              properties:
+                prompt:
+                  type: string
+                  example: "Write a blog post about quantum computing"
+                model:
+                  type: string
+                  enum: [gemini-1.5-flash, gemini-1.5-pro, gpt-4, gpt-3.5-turbo]
+                  default: gemini-1.5-flash
+      responses:
+        '200':
+          description: Successfully enhanced prompt
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      enhanced_prompt:
+                        type: string
+                        example: "Write a comprehensive blog post about quantum computing, covering its principles, applications, and future implications. Include real-world examples and explain complex concepts in an accessible way."
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/api-keys:
+    get:
+      summary: Get all API keys for the current user
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of API keys
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApiKey'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Add a new API key
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - provider
+                - apiKey
+              properties:
+                provider:
+                  type: string
+                  enum: [google, openai]
+                  example: google
+                apiKey:
+                  type: string
+                  example: "AIzaSyA1234567890abcdefghijklmnopqrstuvwxyz"
+      responses:
+        '200':
+          description: API key added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/ApiKey'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/api-keys/{id}:
+    delete:
+      summary: Delete an API key
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: API key deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/settings:
+    get:
+      summary: Get current user settings
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Settings'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      summary: Update user settings
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                use_own_api:
+                  type: boolean
+                  example: true
+                selected_key_id:
+                  type: string
+                  format: uuid
+                  nullable: true
+                  example: "123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        '200':
+          description: Settings updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Settings'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/usage:
+    get:
+      summary: Get usage statistics
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Start date for usage statistics (YYYY-MM-DD)
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: End date for usage statistics (YYYY-MM-DD)
+      responses:
+        '200':
+          description: Usage statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      total_prompts:
+                        type: integer
+                        example: 150
+                      total_tokens:
+                        type: integer
+                        example: 45000
+                      daily_usage:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            date:
+                              type: string
+                              format: date
+                            prompts:
+                              type: integer
+                            tokens:
+                              type: integer
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error' 
