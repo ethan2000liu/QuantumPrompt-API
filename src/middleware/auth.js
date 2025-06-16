@@ -1,34 +1,20 @@
-const jwt = require('jsonwebtoken');
 const { supabase } = require('../config/database');
 const logger = require('../utils/logger');
 
 const verifyToken = async (req, res, next) => {
   try {
-    const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
+    const token = req.headers.authorization?.split(' ')[1];
     logger.info('Auth token:', { token: token ? 'present' : 'missing' });
 
     if (!token) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    // First verify our custom JWT
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    logger.info('Decoded token:', { userId: decoded.userId });
+    // Verify with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(token);
     
-    // Then verify with Supabase session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError || !session) {
-      logger.error('Session verification failed:', { error: sessionError });
-      return res.status(401).json({ error: 'Invalid session' });
-    }
-
-    // Verify the user ID matches
-    if (session.user.id !== decoded.userId) {
-      logger.error('User ID mismatch:', { 
-        sessionUserId: session.user.id, 
-        tokenUserId: decoded.userId 
-      });
+    if (error || !user) {
+      logger.error('Token verification failed:', error);
       return res.status(401).json({ error: 'Invalid token' });
     }
 
@@ -36,7 +22,7 @@ const verifyToken = async (req, res, next) => {
     const { data: settings, error: settingsError } = await supabase
       .from('user_settings')
       .select('*')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .single();
 
     if (settingsError) {
@@ -45,16 +31,13 @@ const verifyToken = async (req, res, next) => {
     }
 
     req.user = {
-      id: session.user.id,
-      email: session.user.email,
+      id: user.id,
+      email: user.email,
       settings: settings || null
     };
     next();
   } catch (error) {
     logger.error('Authentication error:', error);
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ error: 'Token expired' });
-    }
     return res.status(401).json({ error: 'Invalid token' });
   }
 };

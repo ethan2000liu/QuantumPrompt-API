@@ -1,12 +1,12 @@
 # QuantumPrompt API
 
-A powerful API for enhancing prompts using various AI models. This API allows you to improve your prompts using state-of-the-art AI models like Gemini and GPT.
+A powerful API for enhancing prompts using Google's Gemini AI model. This API allows you to improve your prompts using state-of-the-art AI technology.
 
 ## Features
 
-- 🔄 Prompt Enhancement: Transform basic prompts into detailed, well-structured ones
-- 🔑 API Key Management: Support for multiple AI providers (Google, OpenAI)
-- ⚙️ Custom Settings: Configure your preferred model and API keys
+- 🔄 Prompt Enhancement: Transform basic prompts into detailed, well-structured ones using Gemini AI
+- 🔑 API Key Management: Support for Google API keys
+- ⚙️ Custom Settings: Configure your API key preferences
 - 📊 Usage Tracking: Monitor your API usage with detailed statistics
 - 🔒 Secure Authentication: JWT-based authentication system
 
@@ -17,6 +17,7 @@ A powerful API for enhancing prompts using various AI models. This API allows yo
 - Node.js (v18 or higher)
 - PostgreSQL (v14 or higher)
 - Supabase account
+- Google API key for Gemini
 
 ### Installation
 
@@ -35,7 +36,12 @@ npm install
 ```bash
 cp .env.example .env
 ```
-Edit `.env` with your configuration.
+Edit `.env` with your configuration:
+```
+GOOGLE_API_KEY=your_google_api_key
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_key
+```
 
 4. Run database migrations:
 ```bash
@@ -65,8 +71,7 @@ Content-Type: application/json
 Authorization: Bearer YOUR_JWT_TOKEN
 
 {
-  "prompt": "Write a blog post about quantum computing",
-  "model": "gemini-1.5-flash"  // Optional, defaults to gemini-1.5-flash
+  "prompt": "Write a blog post about quantum computing"
 }
 ```
 
@@ -86,14 +91,8 @@ Authorization: Bearer YOUR_JWT_TOKEN
 
 {
   "provider": "google",
-  "apiKey": "YOUR_API_KEY"
+  "apiKey": "YOUR_GOOGLE_API_KEY"
 }
-```
-
-3. Delete API Key:
-```http
-DELETE /api/api-keys/{id}
-Authorization: Bearer YOUR_JWT_TOKEN
 ```
 
 #### Settings Management

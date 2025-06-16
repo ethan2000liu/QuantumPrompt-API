@@ -2,28 +2,11 @@ openapi: 3.0.0
 info:
   title: QuantumPrompt API
   version: 1.0.0
-  description: |
-    API for enhancing prompts using various AI models.
-    
-    ## Authentication
-    This API uses Supabase Authentication. All endpoints require a valid JWT token obtained from Supabase Auth.
-    The token should be included in the Authorization header as a Bearer token.
-    
-    ### Getting a Token
-    1. Sign up/login through the Chrome Extension
-    2. The extension will automatically handle authentication with Supabase
-    3. Use the provided JWT token in the Authorization header
-    
-    Example:
-    ```
-    Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-    ```
+  description: API for enhancing prompts using Google's Gemini AI model
 
 servers:
   - url: http://localhost:3000
     description: Local development server
-  - url: https://quantum-prompt-api.vercel.app
-    description: Production server
 
 components:
   securitySchemes:
@@ -31,7 +14,6 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: JWT token obtained from Supabase Auth
 
   schemas:
     Error:
@@ -55,7 +37,7 @@ components:
           format: uuid
         provider:
           type: string
-          enum: [google, openai]
+          enum: [google]
         api_key:
           type: string
         created_at:
@@ -74,9 +56,6 @@ components:
           type: string
           format: uuid
           nullable: true
-        preferred_model:
-          type: string
-          enum: [gemini-1.5-flash, gemini-1.5-pro, gpt-4, gpt-3.5-turbo]
 
     UsageLog:
       type: object
@@ -88,56 +67,15 @@ components:
           type: integer
         model_used:
           type: string
+          example: "gemini-1.5-flash"
         created_at:
           type: string
           format: date-time
 
-    Session:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: true
-        data:
-          type: object
-          properties:
-            user:
-              type: object
-              properties:
-                id:
-                  type: string
-                  format: uuid
-            settings:
-              $ref: '#/components/schemas/Settings'
-            apiKeys:
-              type: array
-              items:
-                $ref: '#/components/schemas/ApiKey'
-
 paths:
-  /api/auth/session:
-    get:
-      summary: Get current user session
-      description: Returns the current user's session information including settings and API keys
-      security:
-        - BearerAuth: []
-      responses:
-        '200':
-          description: Session information
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Session'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
   /api/enhance:
     post:
-      summary: Enhance a prompt using AI
+      summary: Enhance a prompt using Google's Gemini AI
       security:
         - BearerAuth: []
       requestBody:
@@ -152,10 +90,6 @@ paths:
                 prompt:
                   type: string
                   example: "Write a blog post about quantum computing"
-                model:
-                  type: string
-                  enum: [gemini-1.5-flash, gemini-1.5-pro, gpt-4, gpt-3.5-turbo]
-                  default: gemini-1.5-flash
       responses:
         '200':
           description: Successfully enhanced prompt
@@ -170,7 +104,10 @@ paths:
                   data:
                     type: object
                     properties:
-                      enhanced_prompt:
+                      originalPrompt:
+                        type: string
+                        example: "Write a blog post about quantum computing"
+                      enhancedPrompt:
                         type: string
                         example: "Write a comprehensive blog post about quantum computing, covering its principles, applications, and future implications. Include real-world examples and explain complex concepts in an accessible way."
         '400':
@@ -193,7 +130,7 @@ paths:
         - BearerAuth: []
       responses:
         '200':
-          description: List of API keys
+          description: List of API keys retrieved successfully
           content:
             application/json:
               schema:
@@ -229,13 +166,13 @@ paths:
               properties:
                 provider:
                   type: string
-                  enum: [google, openai]
-                  example: google
+                  enum: [google]
+                  example: "google"
                 apiKey:
                   type: string
-                  example: "AIzaSyA1234567890abcdefghijklmnopqrstuvwxyz"
+                  example: "YOUR_GOOGLE_API_KEY"
       responses:
-        '200':
+        '201':
           description: API key added successfully
           content:
             application/json:
@@ -260,50 +197,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  /api/api-keys/{id}:
-    delete:
-      summary: Delete an API key
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: API key deleted successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-        '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
   /api/settings:
     get:
-      summary: Get current user settings
+      summary: Get user settings
       security:
         - BearerAuth: []
       responses:
         '200':
-          description: User settings
+          description: Settings retrieved successfully
           content:
             application/json:
               schema:
@@ -374,19 +275,21 @@ paths:
       parameters:
         - name: start_date
           in: query
+          description: Start date for usage statistics (YYYY-MM-DD)
+          required: false
           schema:
             type: string
             format: date
-          description: Start date for usage statistics (YYYY-MM-DD)
         - name: end_date
           in: query
+          description: End date for usage statistics (YYYY-MM-DD)
+          required: false
           schema:
             type: string
             format: date
-          description: End date for usage statistics (YYYY-MM-DD)
       responses:
         '200':
-          description: Usage statistics
+          description: Usage statistics retrieved successfully
           content:
             application/json:
               schema:
@@ -396,26 +299,9 @@ paths:
                     type: boolean
                     example: true
                   data:
-                    type: object
-                    properties:
-                      total_prompts:
-                        type: integer
-                        example: 150
-                      total_tokens:
-                        type: integer
-                        example: 45000
-                      daily_usage:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            date:
-                              type: string
-                              format: date
-                            prompts:
-                              type: integer
-                            tokens:
-                              type: integer
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UsageLog'
         '401':
           description: Unauthorized
           content:

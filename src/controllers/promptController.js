@@ -42,8 +42,6 @@ const enhancePromptController = async (req, res) => {
     }
 
     let apiKey = process.env.GOOGLE_API_KEY;
-    let provider = 'google';
-    let model = 'gemini-1.5-flash';
 
     // If user wants to use their own API
     if (settings.use_own_api) {
@@ -53,25 +51,22 @@ const enhancePromptController = async (req, res) => {
 
       try {
         apiKey = await decryptApiKey(settings.selected_key.api_key);
-        provider = settings.selected_key.provider;
       } catch (error) {
         logger.error('Error decrypting API key:', error);
         throw new PromptError('Failed to decrypt API key');
       }
     }
 
-    logger.info('Enhancing prompt with settings:', { provider, model });
+    logger.info('Enhancing prompt');
 
     const enhancedPrompt = await enhancePrompt(prompt, {
-      provider,
-      apiKey,
-      model
+      apiKey
     });
     
     res.json({
       success: true,
       data: {
-      originalPrompt: prompt,
+        originalPrompt: prompt,
         enhancedPrompt
       }
     });
@@ -88,12 +83,9 @@ const enhancePromptController = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      error: 'Failed to enhance prompt',
-      details: error.message
+      error: 'Failed to enhance prompt'
     });
   }
 };
 
-module.exports = {
-  enhancePromptController
-}; 
+module.exports = { enhancePromptController }; 

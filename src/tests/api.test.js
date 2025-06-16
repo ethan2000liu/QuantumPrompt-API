@@ -128,13 +128,11 @@ describe('API Tests', () => {
         .put('/api/settings')
         .set('Cookie', [`token=${authToken}`])
         .send({
-          preferredModel: 'gpt-4',
           useOwnApi: true
         });
 
       expect(res.status).toBe(200);
       expect(res.body).toHaveProperty('settings');
-      expect(res.body.settings).toHaveProperty('preferred_model', 'gpt-4');
       expect(res.body.settings).toHaveProperty('use_own_api', true);
     });
   });

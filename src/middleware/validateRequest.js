@@ -10,7 +10,7 @@ const promptSchema = z.object({
 });
 
 const apiKeySchema = z.object({
-  provider: z.enum(['openai', 'google']),
+  provider: z.literal('google'),
   apiKey: z.string().min(1, 'API key cannot be empty')
 });
 

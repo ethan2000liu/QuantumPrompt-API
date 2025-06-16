@@ -204,17 +204,6 @@ const register = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ error: 'Please provide a valid email address' });
-    }
-
-    // Validate password strength
-    if (password.length < 8) {
-      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
-    }
-
     // Register with Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
@@ -225,8 +214,8 @@ const register = async (req, res) => {
     });
 
     if (authError) {
-      const { status, message } = handleAuthError(authError);
-      return res.status(status).json({ error: message });
+      logger.error('Registration error:', authError);
+      return res.status(400).json({ error: authError.message });
     }
 
     // Create default user settings
@@ -235,7 +224,6 @@ const register = async (req, res) => {
       .insert([
         { 
           user_id: authData.user.id,
-          preferred_model: 'gemini-1.5-flash',
           use_own_api: false
         }
       ]);
@@ -253,8 +241,8 @@ const register = async (req, res) => {
       }
     });
   } catch (error) {
-    const { status, message } = handleAuthError(error);
-    res.status(status).json({ error: message });
+    logger.error('Registration error:', error);
+    res.status(500).json({ error: 'Failed to register' });
   }
 };
 
@@ -349,12 +337,6 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ error: 'Please provide a valid email address' });
-    }
-
     // Sign in with Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email,
@@ -362,37 +344,9 @@ const login = async (req, res) => {
     });
 
     if (authError) {
-      const { status, message } = handleAuthError(authError);
-      return res.status(status).json({ error: message });
+      logger.error('Login error:', authError);
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
-
-    // Generate our custom JWT tokens
-    const token = jwt.sign(
-      { userId: authData.user.id },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
-    );
-
-    const refreshToken = jwt.sign(
-      { userId: authData.user.id },
-      process.env.JWT_REFRESH_SECRET,
-      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN }
-    );
-
-    // Set cookies
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.COOKIE_SECURE === 'true',
-      domain: process.env.COOKIE_DOMAIN,
-      maxAge: parseInt(process.env.JWT_EXPIRES_IN) * 1000
-    });
-
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.COOKIE_SECURE === 'true',
-      domain: process.env.COOKIE_DOMAIN,
-      maxAge: parseInt(process.env.JWT_REFRESH_EXPIRES_IN) * 1000
-    });
 
     res.json({
       message: 'Login successful',
@@ -400,27 +354,22 @@ const login = async (req, res) => {
         id: authData.user.id,
         email: authData.user.email
       },
-      token
+      token: authData.session.access_token
     });
   } catch (error) {
-    const { status, message } = handleAuthError(error);
-    res.status(status).json({ error: message });
+    logger.error('Login error:', error);
+    res.status(500).json({ error: 'Failed to login' });
   }
 };
 
 const logout = async (req, res) => {
   try {
-    // Sign out from Supabase Auth
     const { error } = await supabase.auth.signOut();
     
     if (error) {
       logger.error('Logout error:', error);
-      // Continue with our logout even if Supabase logout fails
+      return res.status(500).json({ error: 'Failed to logout' });
     }
-
-    // Clear our custom JWT cookies
-    res.clearCookie('token');
-    res.clearCookie('refreshToken');
     
     res.json({ message: 'Logged out successfully' });
   } catch (error) {
@@ -431,15 +380,15 @@ const logout = async (req, res) => {
 
 const getSession = async (req, res) => {
   try {
-    // Get Supabase session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError) {
-      logger.error('Session error:', sessionError);
-      throw sessionError;
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
     }
 
-    if (!session) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    
+    if (userError || !user) {
+      logger.error('Session error:', userError);
       return res.status(401).json({ error: 'No active session' });
     }
 
@@ -447,7 +396,7 @@ const getSession = async (req, res) => {
     const { data: settings, error: settingsError } = await supabase
       .from('user_settings')
       .select('*')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .single();
 
     if (settingsError) {
@@ -457,8 +406,8 @@ const getSession = async (req, res) => {
 
     res.json({
       user: {
-        id: session.user.id,
-        email: session.user.email
+        id: user.id,
+        email: user.email
       },
       settings
     });
