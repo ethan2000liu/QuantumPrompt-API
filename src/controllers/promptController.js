@@ -66,7 +66,7 @@ const enhancePromptController = async (req, res) => {
     res.json({
       success: true,
       data: {
-        originalPrompt: prompt,
+      originalPrompt: prompt,
         enhancedPrompt
       }
     });

@@ -13,10 +13,10 @@ const decryptApiKey = (encryptedApiKey) => {
 
 const addApiKey = async (req, res) => {
   try {
-    const { provider, apiKey } = req.body;
+    const { provider, apiKey, name } = req.body;
     const userId = req.user.id;
 
-    logger.info('Adding API key:', { provider, userId });
+    logger.info('Adding API key:', { provider, name, userId });
 
     // Encrypt API key
     const encryptedApiKey = encryptApiKey(apiKey);
@@ -28,7 +28,8 @@ const addApiKey = async (req, res) => {
         {
           user_id: userId,
           provider,
-          api_key: encryptedApiKey
+          api_key: encryptedApiKey,
+          name: name || 'My API Key'
         }
       ])
       .select()
@@ -42,7 +43,8 @@ const addApiKey = async (req, res) => {
     res.status(201).json({
       message: 'API key added successfully',
       id: data.id,
-      provider: data.provider
+      provider: data.provider,
+      name: data.name
     });
   } catch (error) {
     logger.error('Add API key error:', error);
@@ -59,7 +61,7 @@ const getApiKeys = async (req, res) => {
 
     const { data, error } = await supabase
       .from('api_keys')
-      .select('id, provider, created_at')
+      .select('id, provider, name, created_at')
       .eq('user_id', userId);
 
     if (error) throw error;

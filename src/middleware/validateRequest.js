@@ -11,7 +11,8 @@ const promptSchema = z.object({
 
 const apiKeySchema = z.object({
   provider: z.literal('google'),
-  apiKey: z.string().min(1, 'API key cannot be empty')
+  apiKey: z.string().min(1, 'API key cannot be empty'),
+  name: z.string().optional()
 });
 
 const settingsSchema = z.object({
@@ -38,12 +39,21 @@ const validatePromptRequest = (req, res, next) => {
 };
 
 const validateApiKeyRequest = (req, res, next) => {
-  try {
-    apiKeySchema.parse(req.body);
-    next();
-  } catch (error) {
-    res.status(400).json({ error: error.errors[0].message });
+  const { provider, apiKey, name } = req.body;
+
+  if (!provider || !apiKey) {
+    return res.status(400).json({ error: 'Provider and API key are required' });
   }
+
+  if (provider !== 'google') {
+    return res.status(400).json({ error: 'Only Google provider is supported' });
+  }
+
+  if (name && typeof name !== 'string') {
+    return res.status(400).json({ error: 'Name must be a string' });
+  }
+
+  next();
 };
 
 const validateSettingsRequest = (req, res, next) => {
