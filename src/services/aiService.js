@@ -24,7 +24,7 @@ const enhancePrompt = async (originalPrompt, options = {}) => {
     - Make the prompt more effective for AI systems
     - Do not change the fundamental request or add unintended requirements
     - Format the enhanced prompt in a clean, readable way
-    - Do not add any additional instructions
+    - Do not add any additional unnecessary instructions
     - Keep the prompt concise and to the points
     - Maintain the original language and terminology used by the user
     
